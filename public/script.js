@@ -12,6 +12,7 @@
   const fileInputEl = document.getElementById('file-input');
   const botSettingsBtnEl = document.getElementById('bot-settings-btn');
   const botSettingsModalEl = document.getElementById('bot-settings-modal');
+  const apiKeySettingsBtnEl = document.getElementById('api-key-settings-btn');
 
   // Simple in-memory state with localStorage persistence
   const storageKey = 'chatbot.projects.v1';
@@ -25,6 +26,7 @@
   renderChats();
   renderMessages();
   initBotSettings();
+  checkApiKey();
 
   // Event listeners
   newProjectBtn.addEventListener('click', () => {
@@ -227,8 +229,8 @@
   }
 
   async function callChatAPI(userMessage) {
-    // OpenAI API with embedded key
-    const apiKey = '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';
+    // Get API key from secure storage
+    const apiKey = getApiKey();
     if (!apiKey) {
       console.log('Kein OpenAI API Key gefunden. Verwende Mock-Antworten.');
       return null;
@@ -528,6 +530,9 @@
   }
 
   function initBotSettings(){
+    // API Key settings
+    apiKeySettingsBtnEl.addEventListener('click', showApiKeyManagementModal);
+    
     // Modal controls
     botSettingsBtnEl.addEventListener('click', openBotSettingsModal);
     botSettingsModalEl.querySelector('.modal-close').addEventListener('click', closeBotSettingsModal);
@@ -663,6 +668,198 @@
 
     systemPrompt += " Antworte auf Deutsch.";
     return systemPrompt;
+  }
+
+  // API Key Management
+  function getApiKey(){
+    return localStorage.getItem('chatbot.api-key');
+  }
+
+  function setApiKey(key){
+    if (key && key.trim()) {
+      localStorage.setItem('chatbot.api-key', key.trim());
+      return true;
+    }
+    return false;
+  }
+
+  function clearApiKey(){
+    localStorage.removeItem('chatbot.api-key');
+  }
+
+  function checkApiKey(){
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      showApiKeyModal();
+    }
+  }
+
+  function showApiKeyModal(){
+    const modal = createApiKeyModal();
+    document.body.appendChild(modal);
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function createApiKeyModal(){
+    const modal = document.createElement('div');
+    modal.className = 'modal api-key-modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🔑 OpenAI API Key erforderlich</h2>
+        </div>
+        <div class="modal-body">
+          <p>Um den Chatbot zu verwenden, benötigen Sie einen OpenAI API Key.</p>
+          <div class="api-key-info">
+            <h4>Wie erhalte ich einen API Key?</h4>
+            <ol>
+              <li>Besuchen Sie <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></li>
+              <li>Melden Sie sich an oder erstellen Sie ein Konto</li>
+              <li>Klicken Sie auf "Create new secret key"</li>
+              <li>Kopieren Sie den generierten Key</li>
+            </ol>
+          </div>
+          <div class="setting-group">
+            <label for="api-key-input">OpenAI API Key:</label>
+            <input type="password" id="api-key-input" placeholder="sk-..." />
+            <small>Ihr Key wird nur lokal in Ihrem Browser gespeichert.</small>
+          </div>
+          <div class="demo-option">
+            <button id="demo-mode-btn" class="btn-secondary">Demo-Modus (ohne API)</button>
+            <small>Verwendet Mock-Antworten für Testzwecke</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="save-api-key" class="btn-primary">Key speichern</button>
+        </div>
+      </div>
+    `;
+
+    // Event listeners for the modal
+    const saveBtn = modal.querySelector('#save-api-key');
+    const demoBtn = modal.querySelector('#demo-mode-btn');
+    const input = modal.querySelector('#api-key-input');
+
+    saveBtn.addEventListener('click', () => {
+      const key = input.value.trim();
+      if (key && key.startsWith('sk-')) {
+        setApiKey(key);
+        closeApiKeyModal(modal);
+        infoMessage('✅ API Key wurde gespeichert. Sie können jetzt chatten!');
+      } else {
+        alert('Bitte geben Sie einen gültigen OpenAI API Key ein (beginnt mit "sk-").');
+      }
+    });
+
+    demoBtn.addEventListener('click', () => {
+      closeApiKeyModal(modal);
+      infoMessage('🎭 Demo-Modus aktiviert. Der Bot verwendet Mock-Antworten.');
+    });
+
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        saveBtn.click();
+      }
+    });
+
+    return modal;
+  }
+
+  function closeApiKeyModal(modal){
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => {
+      document.body.removeChild(modal);
+    }, 300);
+  }
+
+  function showApiKeyManagementModal(){
+    const modal = createApiKeyManagementModal();
+    document.body.appendChild(modal);
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function createApiKeyManagementModal(){
+    const currentKey = getApiKey();
+    const hasKey = !!currentKey;
+    const keyPreview = hasKey ? `${currentKey.substring(0, 7)}...${currentKey.slice(-4)}` : 'Kein Key gespeichert';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal api-key-modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🔑 API Key verwalten</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="current-key-status">
+            <h4>Aktueller Status:</h4>
+            <div class="key-status ${hasKey ? 'has-key' : 'no-key'}">
+              <span class="status-icon">${hasKey ? '✅' : '❌'}</span>
+              <span class="key-preview">${keyPreview}</span>
+            </div>
+          </div>
+          
+          <div class="setting-group">
+            <label for="new-api-key-input">Neuen API Key eingeben:</label>
+            <input type="password" id="new-api-key-input" placeholder="sk-..." />
+            <small>Überschreibt den aktuellen Key</small>
+          </div>
+          
+          <div class="api-key-info">
+            <h4>API Key erhalten:</h4>
+            <p>Besuchen Sie <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> um einen neuen Key zu erstellen.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="clear-api-key" class="btn-secondary danger-btn" ${!hasKey ? 'disabled' : ''}>Key löschen</button>
+          <button id="update-api-key" class="btn-primary">Key aktualisieren</button>
+        </div>
+      </div>
+    `;
+
+    // Event listeners
+    const closeBtn = modal.querySelector('.modal-close');
+    const clearBtn = modal.querySelector('#clear-api-key');
+    const updateBtn = modal.querySelector('#update-api-key');
+    const input = modal.querySelector('#new-api-key-input');
+
+    closeBtn.addEventListener('click', () => closeApiKeyModal(modal));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeApiKeyModal(modal);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (confirm('API Key wirklich löschen? Sie müssen dann einen neuen eingeben.')) {
+        clearApiKey();
+        closeApiKeyModal(modal);
+        infoMessage('🗑️ API Key wurde gelöscht.');
+      }
+    });
+
+    updateBtn.addEventListener('click', () => {
+      const newKey = input.value.trim();
+      if (newKey && newKey.startsWith('sk-')) {
+        setApiKey(newKey);
+        closeApiKeyModal(modal);
+        infoMessage('✅ API Key wurde aktualisiert!');
+      } else if (newKey) {
+        alert('Bitte geben Sie einen gültigen OpenAI API Key ein (beginnt mit "sk-").');
+      } else {
+        alert('Bitte geben Sie einen API Key ein.');
+      }
+    });
+
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        updateBtn.click();
+      }
+    });
+
+    return modal;
   }
 })();
 
