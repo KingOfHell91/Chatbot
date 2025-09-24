@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mein benutzerdefinierter Chatbot</title>
+  <link rel="stylesheet" href="public/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Projekte</h1>
+        <button id="new-project-btn" title="Neues Projekt">+</button>
+      </div>
+      <ul id="project-list" class="list"></ul>
+      <div class="divider"></div>
+      <div class="sidebar-subheader">
+        <h2>Chats</h2>
+      </div>
+      <ul id="chat-list" class="list"></ul>
+    </aside>
+    <main class="main">
+      <header class="main-header">
+        <div>
+          <span id="current-project-name">Unbenanntes Projekt</span>
+          <span class="dot">•</span>
+          <span id="current-chat-name">Neuer Chat</span>
+        </div>
+        <div class="header-actions">
+          <button id="bot-settings-btn" class="settings-btn" title="Bot-Verhalten einstellen">⚙️</button>
+          <label class="file-upload">
+            <input id="file-input" type="file" multiple accept=".txt,.md,.markdown,.csv" />
+            <span>Dateien hochladen</span>
+          </label>
+        </div>
+      </header>
+      <section id="chat-window" class="chat-window"></section>
+      <form id="composer" class="composer">
+        <textarea id="message-input" placeholder="Schreibe eine Nachricht..." rows="1"></textarea>
+        <button id="send-btn" type="submit">Senden</button>
+      </form>
+    </main>
+  </div>
+
+  <template id="message-template">
+    <div class="message">
+      <div class="avatar"></div>
+      <div class="bubble"></div>
+    </div>
+  </template>
+
+  <!-- Bot Settings Modal -->
+  <div id="bot-settings-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🤖 Bot-Verhalten einstellen</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <h3>🎭 Persönlichkeit</h3>
+          <div class="personality-grid">
+            <div class="personality-card" data-personality="assistant">
+              <div class="personality-icon">🤝</div>
+              <h4>Hilfsbereit</h4>
+              <p>Freundlich, professionell und unterstützend</p>
+            </div>
+            <div class="personality-card" data-personality="expert">
+              <div class="personality-icon">🎓</div>
+              <h4>Experte</h4>
+              <p>Detailliert, technisch und präzise</p>
+            </div>
+            <div class="personality-card" data-personality="creative">
+              <div class="personality-icon">🎨</div>
+              <h4>Kreativ</h4>
+              <p>Inspirierend, innovativ und fantasievoll</p>
+            </div>
+            <div class="personality-card" data-personality="casual">
+              <div class="personality-icon">😊</div>
+              <h4>Locker</h4>
+              <p>Entspannt, humorvoll und nahbar</p>
+            </div>
+            <div class="personality-card" data-personality="analytical">
+              <div class="personality-icon">📊</div>
+              <h4>Analytisch</h4>
+              <p>Logisch, strukturiert und datenorientiert</p>
+            </div>
+            <div class="personality-card" data-personality="mentor">
+              <div class="personality-icon">🧠</div>
+              <h4>Mentor</h4>
+              <p>Lehrend, geduldig und entwicklungsfördernd</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>💬 Antwort-Stil</h3>
+          <div class="setting-group">
+            <label>Antwortlänge:</label>
+            <select id="response-length">
+              <option value="short">Kurz und prägnant</option>
+              <option value="medium" selected>Ausgewogen</option>
+              <option value="long">Ausführlich und detailliert</option>
+            </select>
+          </div>
+          
+          <div class="setting-group">
+            <label>Formalität:</label>
+            <select id="formality">
+              <option value="formal">Formal (Sie)</option>
+              <option value="casual" selected>Locker (Du)</option>
+              <option value="mixed">Gemischt</option>
+            </select>
+          </div>
+          
+          <div class="setting-group">
+            <label>Erklärungstiefe:</label>
+            <select id="explanation-depth">
+              <option value="basic">Grundlegend</option>
+              <option value="intermediate" selected>Mittleres Niveau</option>
+              <option value="advanced">Fortgeschritten</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>🎯 Spezialverhalten</h3>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" id="code-focus">
+              <span class="checkmark"></span>
+              Code-Fokus: Bevorzuge technische Lösungen
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="examples-focus">
+              <span class="checkmark"></span>
+              Beispiel-reich: Viele praktische Beispiele geben
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="step-by-step">
+              <span class="checkmark"></span>
+              Schritt-für-Schritt: Prozesse aufteilen
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="ask-clarifications">
+              <span class="checkmark"></span>
+              Nachfragen: Bei Unklarheiten nachfragen
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="reset-settings" class="btn-secondary">Zurücksetzen</button>
+        <button id="save-settings" class="btn-primary">Einstellungen speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="public/script.js" defer></script>
+</body>
+</html>
+ 
